@@ -21,9 +21,9 @@ Write-Host "Local subnet set to $Subnet"
 # Ping Sweep with OS Fingerprinting
 $Inventory = 1..255 | ForEach-Object -Parallel {
 
-    #IMPORTANT: Manual vs Automatic Subnet Selection
-    #IMPORTANT: If you want to manually set a subnet, you can uncomment and edit the line below, but you MUST comment out the other $IP declaration.
-    #$IP = "192.168.1.$_"
+#IMPORTANT: Manual vs Automatic Subnet Selection
+#IMPORTANT: If you want to manually set a subnet, you can uncomment and edit the line below, but you MUST comment out the other $IP declaration.
+#$IP = "192.168.1.$_"
     $IP = "$($using:Subnet)$_"
 
     Write-Host "Scanning $IP"
@@ -76,7 +76,7 @@ $rec = Read-Host "Enter a menu option to continue: `n1. Enter Admin Credentials 
 while ($rec -ne "4") {
     switch ($rec) {
 
-        # Creds collection
+# Creds collection
         "1" {
             Write-Host "Option 1 selected: Enter Admin Credentials"
 
@@ -98,7 +98,7 @@ while ($rec -ne "4") {
             }
         }
 
-        # Windows Execution Loop Start
+# Windows Execution Loop Start
         "2" {
             if ($null -eq $wincred) {
                 Write-Host "Access Denied: No credentials found. Returning to menu..." -ForegroundColor Yellow
@@ -115,7 +115,7 @@ while ($rec -ne "4") {
                 $Results = @()
                 $sessions = @()
 
-                #Iterate through each IP, start a session using windows creds, and invoke commands on each session.
+#Iterate through each IP, start a session using windows creds, and invoke commands on each session.
                 foreach ($ip in $WindowsIP) {
                     Write-Host "Creating new session with $ip"
 
@@ -144,38 +144,36 @@ while ($rec -ne "4") {
 
                             Write-Output "=============================="
                             Write-Output "STATUS: PASSED"
-
-                            Write-Output "`nHOSTNAME"
+# Commands to be executed on remote host                             
+                            Write-Output "=== HOST INFORMATION ==="
+                            $temp = hostname
                             hostname
-
-                            Write-Output "`nIP CONFIGURATION"
-                            ipconfig /all
-
-                            Write-Output "`nCURRENT USER"
                             whoami
-
-                            Write-Output "`nOPERATING SYSTEM"
+                            ipconfig /all
                             systeminfo | findstr /B /C:"OS Name" /C:"OS Version" /C:"System Boot Time"
 
-                            Write-Output "`nAUTORUNS / STARTUP COMMANDS"
-                            Get-CimInstance Win32_StartupCommand | Format-Table Name, Command, Location, User -AutoSize
+                            Write-Output "=== PERSISTENCE ==="
+                            Get-WmiObject Win32_StartupCommand | Format-Table Name, Command, Location, User -AutoSize               
 
-                            Write-Output "`nPROCESS LIST"
+                            Write-Output "=== PERSISTENCE - Processes ==="                            
+                            wmic process get description, executablepath
                             tasklist
 
-                            Write-Output "`nNETWORK CONNECTIONS"
+                            Write-Output "=== Network Connections ==="
                             netstat -ano
 
-                            Write-Output "`nLOCAL USERS"
+                            Write-Output "=== PERSISTENCE - Services ==="
+                            Get-CimInstance Win32_Service | Select Name, State, StartMode, PathName | Sort-Object State, Name
+                            schtasks /query /fo LIST
+
+                            Write-Output "=== Users/Groups ==="
+                            Get-CimInstance Win32_LoggedOnUser
                             net user
-
-                            Write-Output "`nLOCAL ADMINISTRATORS"
                             net localgroup administrators
+                            net localgroup "Remote Desktop Users"
 
-                            Write-Output "`nSERVICES"
-                            Get-Service | Sort-Object Status, Name
-
-                            Write-Output "=============================="
+                            Write-Output "END OF $temp"
+                            Write-Output "=============================="   
                         }
 
                         $Results += "REMOTE COMPUTER: $($session.ComputerName)"
@@ -192,7 +190,7 @@ while ($rec -ne "4") {
                     }
                 }
 
-                # Save results to a timestamped file
+# Save results to a timestamped file
                 $Timestamp = Get-Date -Format "yyyyMMdd_HHmm"
                 $ReportName = "EagleEye_WindowsReport_$Timestamp.txt"
 
