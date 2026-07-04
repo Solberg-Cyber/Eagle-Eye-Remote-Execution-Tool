@@ -1,5 +1,3 @@
-** By Dan Solberg **
-
 ** In order to run: ** powershell -ExecutionPolicy Bypass -File script.ps1
 ---
 ** Purpose of this script: **
